@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantine — Gestion des services</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --surface2: #f0ede8;
+  --border: #e2ddd6;
+  --border2: #cdc8bf;
+  --text: #1a1714;
+  --text2: #6b6560;
+  --text3: #a09890;
+  --blue: #2563eb;
+  --blue-light: #eff6ff;
+  --blue-border: #bfdbfe;
+  --teal: #0f766e;
+  --teal-light: #f0fdfa;
+  --teal-border: #99f6e4;
+  --purple: #6d28d9;
+  --purple-light: #f5f3ff;
+  --purple-border: #ddd6fe;
+  --amber: #b45309;
+  --amber-light: #fffbeb;
+  --amber-border: #fde68a;
+  --green: #166534;
+  --green-light: #f0fdf4;
+  --green-border: #bbf7d0;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --red-border: #fecaca;
+  --gray: #57534e;
+  --gray-light: #fafaf9;
+  --gray-border: #d6d3d1;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+}
+[data-theme="dark"] {
+  --bg: #0f0e0d;
+  --surface: #1c1a18;
+  --surface2: #252220;
+  --border: #2e2b28;
+  --border2: #3d3935;
+  --text: #f0ede8;
+  --text2: #a09890;
+  --text3: #6b6560;
+  --blue-light: #1e3a5f;
+  --teal-light: #0d3330;
+  --purple-light: #2d1f5e;
+  --amber-light: #3d2800;
+  --green-light: #0d2e1a;
+  --red-light: #3d1212;
+  --gray-light: #1c1a18;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── LAYOUT ── */
+.shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0 8px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+.sidebar-logo span { color: var(--blue); }
+
+.nav-section { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 12px 8px 6px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text2);
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+.nav-item .icon { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+.nav-item.active .icon { opacity: 1; }
+
+.main { flex: 1; overflow-y: auto; }
+
+.page { display: none; padding: 32px; max-width: 960px; }
+.page.active { display: block; }
+
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.page-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+}
+.stat-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.stat-dot { width: 6px; height: 6px; border-radius: 50%; }
+.stat-value { font-size: 32px; font-weight: 600; letter-spacing: -1px; font-family: 'DM Mono', monospace; }
+.stat-cap { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+.cap-ok { color: var(--teal); } .cap-warn { color: var(--amber); } .cap-over { color: var(--red); }
+
+/* ── SECTION TITLES ── */
+.section-title {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin: 24px 0 12px;
+}
+
+/* ── CLASS ROWS ── */
+.class-list { display: flex; flex-direction: column; gap: 2px; }
+
+.class-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+.class-row:hover { border-color: var(--border2); }
+.class-row.adult-row { border-color: var(--amber-border); background: var(--amber-light); }
+
+.class-name { font-size: 13px; font-weight: 500; flex: 1; }
+.adult-name { font-size: 13px; font-weight: 500; flex: 1; color: var(--amber); }
+
+.counter { display: flex; align-items: center; gap: 8px; }
+.btn-counter {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-size: 16px; cursor: pointer; color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
+  line-height: 1;
+}
+.btn-counter:hover { background: var(--surface2); border-color: var(--text3); color: var(--text); }
+.count-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px; font-weight: 500;
+  min-width: 32px; text-align: center;
+  color: var(--text);
+}
+.count-input {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px; font-weight: 500;
+  width: 52px; text-align: center;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  padding: 5px;
+}
+.count-input:focus { outline: none; border-color: var(--blue); }
+
+.bar-wrap { flex: 1; max-width: 80px; }
+.bar { height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-danger { background: var(--red-light); color: var(--red); border-color: var(--red-border); }
+.btn-danger:hover { background: #fee2e2; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+
+/* ── SCAN ── */
+.scan-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  position: relative;
+}
+.scan-zone:hover, .scan-zone.drag { border-color: var(--blue); background: var(--blue-light); }
+.scan-icon { font-size: 36px; margin-bottom: 12px; }
+.scan-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+.scan-sub { font-size: 12px; color: var(--text3); }
+#file-input { display: none; }
+
+.scan-result {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--green-light);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--green);
+  display: none;
+}
+
+.loading-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 16px;
+  display: none;
+}
+.loading-bar-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 2px;
+  animation: loading 1.5s ease-in-out infinite;
+}
+@keyframes loading {
+  0% { width: 0%; margin-left: 0; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 0%; margin-left: 100%; }
+}
+
+/* ── PLAN SVG ── */
+.plan-controls { display: flex; gap: 8px; margin-bottom: 16px; }
+.plan-toggle {
+  padding: 7px 14px; border-radius: var(--radius);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2);
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.plan-toggle.active-mat { background: var(--blue-light); color: var(--blue); border-color: var(--blue-border); }
+.plan-toggle.active-s2 { background: var(--teal-light); color: var(--teal); border-color: var(--teal-border); }
+.plan-toggle.active-gs { background: var(--purple-light); color: var(--purple); border-color: var(--purple-border); }
+
+.plan-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  position: relative;
+}
+.plan-wrap svg { width: 100%; display: block; }
+.plan-cap { font-size: 12px; margin-bottom: 10px; font-family: 'DM Mono', monospace; }
+
+.legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.leg-sq { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+.plan-tooltip {
+  position: absolute;
+  background: var(--text);
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  z-index: 100;
+  pointer-events: none;
+  display: none;
+  min-width: 120px;
+  line-height: 1.6;
+}
+
+/* ── HISTORIQUE ── */
+.history-grid { display: flex; flex-direction: column; gap: 8px; }
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.history-item:hover { border-color: var(--border2); }
+.history-date { font-size: 13px; font-weight: 500; min-width: 90px; }
+.history-stats { display: flex; gap: 12px; flex: 1; }
+.history-pill {
+  font-size: 11px; font-weight: 500;
+  padding: 3px 8px; border-radius: 20px;
+}
+.pill-blue { background: var(--blue-light); color: var(--blue); }
+.pill-purple { background: var(--purple-light); color: var(--purple); }
+.pill-teal { background: var(--teal-light); color: var(--teal); }
+.history-actions { display: flex; gap: 6px; }
+
+/* ── EFFECTIFS PAR DÉFAUT ── */
+.defaults-grid { display: flex; flex-direction: column; gap: 8px; }
+.default-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.default-name { font-size: 13px; flex: 1; }
+.default-input {
+  font-family: 'DM Mono', monospace;
+  width: 60px; text-align: center;
+  font-size: 14px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  padding: 5px;
+}
+.default-input:focus { outline: none; border-color: var(--blue); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--text);
+  color: white;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  z-index: 1000;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s;
+  max-width: 280px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── POPUP ENFANTS ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  width: 480px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md);
+}
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.child-grid { display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto; }
+.child-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.12s;
+}
+.child-item:hover { background: var(--surface2); }
+.child-item.present { background: var(--green-light); border-color: var(--green-border); }
+.child-name { font-size: 13px; flex: 1; }
+.child-check {
+  width: 18px; height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.12s;
+}
+.child-item.present .child-check {
+  background: var(--green);
+  border-color: var(--green);
+}
+.child-check-icon { display: none; }
+.child-item.present .child-check-icon { display: block; }
+
+.add-child-row { display: flex; gap: 8px; margin-top: 12px; }
+.add-child-input {
+  flex: 1;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+}
+.add-child-input:focus { outline: none; border-color: var(--blue); }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .sidebar { width: 60px; padding: 16px 8px; }
+  .sidebar-logo, .nav-section, .nav-item span { display: none; }
+  .nav-item { justify-content: center; padding: 10px; }
+  .page { padding: 20px 16px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">Cantine <span>·</span></div>
+  <div class="nav-section">Quotidien</div>
+  <button class="nav-item active" onclick="nav('saisie')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M5 5h3M5 11h4"/></svg>
+    <span>Saisie du jour</span>
+  </button>
+  <button class="nav-item" onclick="nav('scan')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><circle cx="11.5" cy="11.5" r="2.5"/></svg>
+    <span>Scan présences</span>
+  </button>
+  <button class="nav-item" onclick="nav('plan-cant')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="6" height="4" rx="1"/><rect x="9" y="4" width="6" height="4" rx="1"/><rect x="3" y="10" width="4" height="3" rx="1"/><rect x="9" y="10" width="4" height="3" rx="1"/></svg>
+    <span>Plan cantine</span>
+  </button>
+  <button class="nav-item" onclick="nav('plan-gs')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="3"/><circle cx="11" cy="6" r="3"/><rect x="2" y="11" width="12" height="3" rx="1"/></svg>
+    <span>Plan grande salle</span>
+  </button>
+  <div class="nav-section">Données</div>
+  <button class="nav-item" onclick="nav('historique')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+    <span>Historique</span>
+  </button>
+  <button class="nav-item" onclick="nav('effectifs')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12l4-4 3 3 5-6"/></svg>
+    <span>Effectifs types</span>
+  </button>
+  <button class="nav-item" onclick="nav('stats')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="10" width="2" height="4"/><rect x="6" y="6" width="2" height="8"/><rect x="10" y="3" width="2" height="11"/><rect x="14" y="8" width="0" height="0"/></svg>
+    <span>Statistiques</span>
+  </button>
+  <button class="nav-item" onclick="nav('caf')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M5 5h4M5 11h3"/></svg>
+    <span>Suivi CAF</span>
+  </button>
+  <button class="nav-item" onclick="nav('pointage')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8l2.5 2.5L12 5"/><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+    <span>Feuille pointage</span>
+  </button>
+  <button class="nav-item" onclick="nav('periscolaire')">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/></svg>
+    <span>Périscolaire</span>
+  </button>
+  <div style="flex:1;"></div>
+  <div class="nav-section">Préférences</div>
+  <button class="nav-item" onclick="toggleDark()" id="dark-toggle">
+    <svg class="icon" id="dark-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/><circle cx="8" cy="8" r="3"/></svg>
+    <span id="dark-label">Mode sombre</span>
+  </button>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ── PAGE SAISIE ── -->
+<div id="page-saisie" class="page active">
+  <div class="page-header">
+    <div class="page-title">Saisie du jour</div>
+    <div class="page-sub" id="today-date"></div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label"><span class="stat-dot" style="background:#2563eb;"></span>Maternelle</div>
+      <div class="stat-value" id="s-tot-mat">0</div>
+      <div class="stat-cap" id="s-cap-mat"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><span class="stat-dot" style="background:#6d28d9;"></span>1er service</div>
+      <div class="stat-value" id="s-tot-s1">0</div>
+      <div class="stat-cap" id="s-cap-s1"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><span class="stat-dot" style="background:#0f766e;"></span>2e service</div>
+      <div class="stat-value" id="s-tot-s2">0</div>
+      <div class="stat-cap" id="s-cap-s2"></div>
+    </div>
+  </div>
+
+  <div class="section-title">Cantine — maternelle</div>
+  <div class="class-list" id="list-mat"></div>
+
+  <div class="section-title">1er service — grande salle</div>
+  <div class="class-list" id="list-s1"></div>
+
+  <div class="section-title">2e service — cantine</div>
+  <div class="class-list" id="list-s2"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="saveToday()">Enregistrer la journée</button>
+    <button class="btn" onclick="loadDefaults()">Charger effectifs types</button>
+    <button class="btn btn-danger btn-sm" onclick="resetAll()">Remettre à zéro</button>
+  </div>
+</div>
+
+<!-- ── PAGE SCAN ── -->
+<div id="page-scan" class="page">
+  <div class="page-header">
+    <div class="page-title">Lecture de feuille</div>
+    <div class="page-sub">Utilise Claude.ai pour lire ta feuille de présences, puis colle le résultat ici</div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;">1</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;">Ouvre Claude.ai et envoie ta photo</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px;">Clique sur le bouton — ça ouvre Claude avec le bon message déjà prêt</div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;font-size:12px;color:var(--text2);font-family:monospace;line-height:1.7;white-space:pre-wrap;" id="claude-prompt-display"></div>
+
+  <div style="display:flex;gap:8px;margin-bottom:28px;">
+    <button class="btn btn-primary" onclick="openClaude()">Ouvrir Claude.ai</button>
+    <button class="btn" onclick="copyPrompt()">Copier le message</button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;">2</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;">Colle la réponse JSON de Claude ici</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px;">Claude te répondra avec un JSON — copie-le et colle-le ci-dessous</div>
+    </div>
+  </div>
+
+  <textarea id="json-paste" placeholder='Colle ici la réponse JSON de Claude...' style="width:100%;height:120px;border:1px solid var(--border2);border-radius:var(--radius);padding:12px;font-family:monospace;font-size:12px;background:var(--bg);color:var(--text);resize:vertical;"></textarea>
+
+  <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:24px;">
+    <button class="btn btn-primary" onclick="importJSON()">Importer les présences</button>
+    <button class="btn btn-sm" onclick="document.getElementById('json-paste').value=''">Effacer</button>
+  </div>
+
+  <div id="scan-result" style="display:none;padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:20px;"></div>
+
+  <div class="divider"></div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="width:28px;height:28px;border-radius:50%;background:var(--gray);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;">3</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;">Ajuste manuellement si besoin</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px;">Clique sur un enfant pour basculer présent / absent</div>
+    </div>
+  </div>
+  <div id="children-list-scan"></div>
+</div>
+
+<!-- ── PAGE PLAN CANTINE ── -->
+<div id="page-plan-cant" class="page">
+  <div class="page-header">
+    <div class="page-title">Plan cantine</div>
+    <div class="page-sub">Maternelle puis 2e service</div>
+  </div>
+  <div class="plan-controls">
+    <button class="plan-toggle active-mat" id="ptog-mat" onclick="setPlanMode('mat')">Maternelle</button>
+    <button class="plan-toggle" id="ptog-s2" onclick="setPlanMode('s2')">2e service</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-sq" style="background:#eff6ff;border:1.5px solid #2563eb;"></div>Occupée</div>
+    <div class="leg"><div class="leg-sq" style="background:#fffbeb;border:1.5px solid #b45309;"></div>Adulte(s)</div>
+    <div class="leg"><div class="leg-sq" style="background:#f0fdf4;border:1.5px dashed #166534;"></div>Table basse</div>
+    <div class="leg"><div class="leg-sq" style="background:#fafaf9;border:1.5px dashed #78716c;"></div>Réservée 2e svc</div>
+    <div class="leg"><div class="leg-sq" style="background:#fef2f2;border:1.5px solid #dc2626;"></div>Dépassement</div>
+  </div>
+  <div class="plan-cap" id="plan-cap-cant"></div>
+  <div class="plan-wrap">
+    <svg id="svg-cant" viewBox="0 0 620 400" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="plan-tooltip" id="tip-cant"></div>
+  </div>
+</div>
+
+<!-- ── PAGE PLAN GRANDE SALLE ── -->
+<div id="page-plan-gs" class="page">
+  <div class="page-header">
+    <div class="page-title">Plan grande salle</div>
+    <div class="page-sub">1er service — CP et CE1</div>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-sq" style="background:#f5f3ff;border:1.5px solid #6d28d9;"></div>Occupée</div>
+    <div class="leg"><div class="leg-sq" style="background:#fffbeb;border:1.5px solid #b45309;"></div>Adulte(s)</div>
+    <div class="leg"><div class="leg-sq" style="background:#fef2f2;border:1.5px solid #dc2626;"></div>Dépassement</div>
+    <div class="leg"><div class="leg-sq" style="opacity:0.3;border:1px solid #aaa;"></div>Vide</div>
+  </div>
+  <div class="plan-cap" id="plan-cap-gs"></div>
+  <div class="plan-wrap">
+    <svg id="svg-gs" viewBox="0 0 620 270" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="plan-tooltip" id="tip-gs"></div>
+  </div>
+</div>
+
+<!-- ── PAGE HISTORIQUE ── -->
+<div id="page-historique" class="page">
+  <div class="page-header">
+    <div class="page-title">Historique</div>
+    <div class="page-sub">Journées enregistrées</div>
+  </div>
+  <div class="history-grid" id="history-list">
+    <div style="color:var(--text3);font-size:13px;padding:20px 0;">Aucune journée enregistrée pour l'instant.</div>
+  </div>
+</div>
+
+<!-- ── PAGE EFFECTIFS ── -->
+<div id="page-effectifs" class="page">
+  <div class="page-header">
+    <div class="page-title">Effectifs types</div>
+    <div class="page-sub">Chiffres habituels pré-remplis au chargement</div>
+  </div>
+  <div class="defaults-grid" id="defaults-list"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="saveDefaults()">Enregistrer comme référence</button>
+    <button class="btn" onclick="copyTodayToDefaults()">Copier depuis aujourd'hui</button>
+  </div>
+
+  <div class="divider"></div>
+  <div style="font-size:14px;font-weight:500;margin-bottom:8px;">Sauvegarde & transfert</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">Exporte toutes tes données (enfants, historique, effectifs) pour les transférer sur un autre appareil ou faire une sauvegarde.</div>
+  <div class="btn-row" style="margin-top:0;">
+    <button class="btn btn-primary" onclick="exportData()">📥 Exporter mes données</button>
+    <button class="btn" onclick="document.getElementById('import-file').click()">📤 Importer un fichier</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+  </div>
+</div>
+
+<!-- ── PAGE STATS ── -->
+<div id="page-stats" class="page">
+  <div class="page-header">
+    <div class="page-title">Statistiques</div>
+    <div class="page-sub">Analyse de la fréquentation sur le mois en cours</div>
+  </div>
+  <div id="stats-alert" style="display:none;padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:20px;"></div>
+  <div class="stat-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+      <div class="stat-label">Moy. maternelle</div>
+      <div class="stat-value" id="avg-mat">—</div>
+      <div class="stat-cap">enfants / jour</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Moy. 1er service</div>
+      <div class="stat-value" id="avg-s1">—</div>
+      <div class="stat-cap">enfants / jour</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Moy. 2e service</div>
+      <div class="stat-value" id="avg-s2">—</div>
+      <div class="stat-cap">enfants / jour</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+    <div class="card">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Jour le plus chargé</div>
+      <div style="font-size:15px;font-weight:600;" id="busiest-day">—</div>
+      <div style="font-size:12px;color:var(--text3);" id="busiest-count"></div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Jour le plus calme</div>
+      <div style="font-size:15px;font-weight:600;" id="lightest-day">—</div>
+      <div style="font-size:12px;color:var(--text3);" id="lightest-count"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:500;margin-bottom:16px;">Fréquentation — <span id="stats-month-label"></span></div>
+    <canvas id="stats-chart" height="160" style="width:100%;"></canvas>
+    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
+      <div class="leg"><div class="leg-sq" style="background:#2563eb;"></div>Maternelle</div>
+      <div class="leg"><div class="leg-sq" style="background:#6d28d9;"></div>1er service</div>
+      <div class="leg"><div class="leg-sq" style="background:#0f766e;"></div>2e service</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px;">Calendrier scolaire — Zone B</div>
+    <div id="calendar-info"></div>
+  </div>
+</div>
+
+<!-- ── PAGE CAF ── -->
+<div id="page-caf" class="page">
+  <div class="page-header">
+    <div class="page-title">Suivi CAF</div>
+    <div class="page-sub">Comptage mensuel des repas servis</div>
+  </div>
+  <div class="stat-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+      <div class="stat-label">Repas ce mois</div>
+      <div class="stat-value" id="caf-total">0</div>
+      <div class="stat-cap" id="caf-month-label"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Jours de service</div>
+      <div class="stat-value" id="caf-jours">0</div>
+      <div class="stat-cap">jours enregistrés</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Moy. par jour</div>
+      <div class="stat-value" id="caf-avg">—</div>
+      <div class="stat-cap">repas / jour</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px;">Détail par mois</div>
+    <div id="caf-monthly-list"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Détail des journées — <span id="caf-detail-month"></span></div>
+    <div id="caf-detail-list" style="max-height:320px;overflow-y:auto;"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="exportCAF()">Exporter rapport CAF (CSV)</button>
+  </div>
+</div>
+
+<!-- ── PAGE PERISCOLAIRE ── -->
+<div id="page-periscolaire" class="page">
+  <div class="page-header">
+    <div class="page-title">Périscolaire</div>
+    <div class="page-sub" id="peri-date-sub"></div>
+  </div>
+
+  <div class="stat-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+      <div class="stat-label">🌅 Matin</div>
+      <div class="stat-value" id="peri-tot-mat">0</div>
+      <div class="stat-cap">enfants présents</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">🌙 Soir</div>
+      <div class="stat-value" id="peri-tot-soir">0</div>
+      <div class="stat-cap">enfants présents</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📊 Total journée</div>
+      <div class="stat-value" id="peri-tot-all">0</div>
+      <div class="stat-cap">passages</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:20px;">
+    <button class="plan-toggle active-mat" id="ptab-peri-mat" onclick="setPeriService('peri_mat')">🌅 Matin</button>
+    <button class="plan-toggle" id="ptab-peri-soir" onclick="setPeriService('peri_soir')">🌙 Soir</button>
+  </div>
+
+  <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+    <div class="leg"><div style="width:18px;height:18px;border-radius:5px;background:var(--green);display:flex;align-items:center;justify-content:center;"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div> Présent</div>
+    <div class="leg"><div style="width:18px;height:18px;border-radius:5px;background:var(--red-light);border:1.5px solid var(--red-border);"></div> Absent</div>
+  </div>
+
+  <div id="peri-list" style="margin-bottom:20px;"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="savePeri()">💾 Enregistrer</button>
+    <button class="btn" onclick="exportPeriExcel()">📊 Export Excel du mois</button>
+    <button class="btn btn-sm" onclick="addPeriChild()">+ Ajouter un enfant</button>
+  </div>
+</div>
+
+<!-- ── PAGE POINTAGE ── -->
+<div id="page-pointage" class="page">
+  <div class="page-header">
+    <div class="page-title">Feuille de pointage</div>
+    <div class="page-sub" id="pointage-date-sub"></div>
+  </div>
+
+  <!-- Service selector -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;" id="pointage-tabs">
+    <button class="plan-toggle active-mat" id="ptab-mat" onclick="setPointageService('mat')">Maternelle</button>
+    <button class="plan-toggle" id="ptab-s1" onclick="setPointageService('s1')">1er service</button>
+    <button class="plan-toggle" id="ptab-s2" onclick="setPointageService('s2')">2e service</button>
+  </div>
+
+  <!-- Legend -->
+  <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+    <div class="leg"><div style="width:18px;height:18px;border-radius:5px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div> Présent</div>
+    <div class="leg"><div style="width:18px;height:18px;border-radius:5px;background:var(--red-light);border:1.5px solid var(--red-border);flex-shrink:0;"></div> Absent</div>
+    <div class="leg"><div style="width:18px;height:18px;border-radius:5px;background:var(--surface2);border:1.5px solid var(--border2);flex-shrink:0;"></div> Non inscrit</div>
+  </div>
+
+  <div id="pointage-list" style="margin-bottom:20px;"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="savePointage()">💾 Enregistrer la feuille</button>
+    <button class="btn" onclick="exportPointageExcel()">📊 Export Excel du mois</button>
+    <button class="btn btn-sm" onclick="addPointageChild()">+ Ajouter un enfant</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- MODAL ENFANTS -->
+<div class="modal-overlay" id="modal-children">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Enfants présents</div>
+    <div class="child-grid" id="modal-child-list"></div>
+    <div class="add-child-row">
+      <input type="text" class="add-child-input" id="add-child-input" placeholder="Ajouter un enfant..." onkeydown="if(event.key==='Enter')addChild()">
+      <button class="btn btn-sm" onclick="addChild()">Ajouter</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="closeModal()">Valider</button>
+      <button class="btn" onclick="closeModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ DONNÉES ══════════════════════════════════════════════════════
+const CLASSES = [
+  {name:'Petite section',        group:'mat', key:'ps'},
+  {name:'Moy. & Grande section', group:'mat', key:'mgs'},
+  {name:'CP',  group:'s1', key:'cp'},
+  {name:'CE1', group:'s1', key:'ce1'},
+  {name:'CE2', group:'s2', key:'ce2'},
+  {name:'CM1', group:'s2', key:'cm1'},
+  {name:'CM2', group:'s2', key:'cm2'},
+];
+// Périscolaire — même enfants, services différents
+const PERI_SERVICES = [
+  {key:'peri_mat', label:'Périscolaire matin',  icon:'🌅'},
+  {key:'peri_soir',label:'Périscolaire soir',   icon:'🌙'},
+];
+
+const TC = [
+  {id:'B', label:'B', cap:6,  low:true,  matOrder:2, s2Order:5, adultMat:false, adultS2:false, x:18,  y:20,  w:75,  h:140},
+  {id:'A', label:'A', cap:4,  low:true,  matOrder:1, s2Order:4, adultMat:false, adultS2:false, x:18,  y:290, w:75,  h:75},
+  {id:'D', label:'D', cap:6,  low:false, matOrder:4, s2Order:null, adultMat:true,  adultS2:false, x:200, y:20,  w:120, h:65},
+  {id:'C', label:'C', cap:4,  low:true,  matOrder:3, s2Order:6, adultMat:false, adultS2:false, x:200, y:190, w:80,  h:65},
+  {id:'J', label:'J', cap:4,  low:false, matOrder:null, s2Order:null, adultMat:false, adultS2:false, x:200, y:300, w:90,  h:70},
+  {id:'E', label:'E', cap:6,  low:false, matOrder:5, s2Order:null, adultMat:false, adultS2:true,  x:340, y:20,  w:120, h:65},
+  {id:'H', label:'H', cap:4,  low:false, matOrder:6, s2Order:null, adultMat:false, adultS2:false, x:340, y:190, w:100, h:65},
+  {id:'I', label:'I', cap:4,  low:false, matOrder:null, s2Order:3, adultMat:false, adultS2:false, x:340, y:300, w:90,  h:70},
+  {id:'F', label:'F', cap:6,  low:false, matOrder:null, s2Order:1, adultMat:false, adultS2:true,  x:510, y:20,  w:90,  h:140},
+  {id:'G', label:'G', cap:6,  low:false, matOrder:null, s2Order:2, adultMat:false, adultS2:false, x:510, y:240, w:90,  h:130},
+];
+const CAP_C = TC.reduce((a,t)=>a+t.cap,0);
+
+const TG = [
+  {id:'G1', label:'', cap:4, round:true,  adultS1:false, x:30,  y:35,  w:80, h:80},
+  {id:'G2', label:'', cap:4, round:true,  adultS1:false, x:30,  y:155, w:80, h:80},
+  {id:'G3', label:'', cap:4, round:true,  adultS1:false, x:155, y:55,  w:80, h:80},
+  {id:'G4', label:'', cap:4, round:true,  adultS1:false, x:155, y:165, w:80, h:80},
+  {id:'G5', label:'', cap:4, round:true,  adultS1:false, x:280, y:100, w:80, h:80},
+  {id:'G6', label:'Grande table', cap:8, round:false, adultS1:true, x:400, y:55, w:190, h:140},
+];
+const CAP_G = TG.reduce((a,t)=>a+t.cap,0);
+
+// ══ ÉTAT ═════════════════════════════════════════════════════════
+let counts = {};
+let adults = {mat:0, s1:0, s2:0};
+let children = {}; // {key: [{name, present, peri_mat, peri_soir, remarque}]}
+let periCounts = {peri_mat:0, peri_soir:0};
+let defaults_counts = {};
+let defaults_adults = {mat:0, s1:0, s2:0};
+let history = [];
+let planMode = 'mat';
+let modalGroup = null;
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('cantine_app')||'{}');
+    counts = d.counts||{};
+    adults = d.adults||{mat:0,s1:0,s2:0};
+    children = d.children||{};
+    defaults_counts = d.defaults_counts||{};
+    defaults_adults = d.defaults_adults||{mat:0,s1:0,s2:0};
+    history = d.history||[];
+    periCounts = d.periCounts||{peri_mat:0, peri_soir:0};
+  } catch(e){}
+  CLASSES.forEach(c=>{ if(!(c.key in counts)) counts[c.key]=0; if(!(c.key in children)) children[c.key]=[]; });
+}
+function save() {
+  localStorage.setItem('cantine_app', JSON.stringify({counts,adults,children,defaults_counts,defaults_adults,history,periCounts}));
+}
+
+function sumG(g) { return CLASSES.filter(c=>c.group===g).reduce((a,c)=>a+(counts[c.key]||0),0); }
+
+// ══ NAVIGATION ═══════════════════════════════════════════════════
+function nav(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const btns = document.querySelectorAll('.nav-item');
+  const ids = ['saisie','scan','plan-cant','plan-gs','historique','effectifs','stats','caf','pointage','periscolaire','dummy'];
+  btns[ids.indexOf(id)]?.classList.add('active');
+  if(id==='plan-cant') drawCantine(planMode);
+  if(id==='plan-gs') drawGS();
+  if(id==='historique') renderHistory();
+  if(id==='effectifs') renderDefaults();
+  if(id==='stats') renderStats();
+  if(id==='caf') renderCAF();
+  if(id==='pointage') renderPointage();
+  if(id==='periscolaire') renderPeri();
+  if(id==='scan') { renderChildrenScan(); document.getElementById('claude-prompt-display').textContent = buildPrompt(); }
+}
+
+// ══ SAISIE ═══════════════════════════════════════════════════════
+function renderSaisie() {
+  ['mat','s1','s2'].forEach(g=>{
+    const el = document.getElementById('list-'+g);
+    el.innerHTML='';
+    CLASSES.filter(c=>c.group===g).forEach(cls=>{
+      el.appendChild(makeClassRow(cls, g));
+    });
+    el.appendChild(makeAdultRow(g));
+  });
+  updateStats();
+}
+
+function makeClassRow(cls, group) {
+  const val = counts[cls.key]||0;
+  const colors = {mat:'#2563eb', s1:'#6d28d9', s2:'#0f766e'};
+  const col = colors[group];
+  const pct = Math.round(val/Math.max(val,25)*100);
+  const div = document.createElement('div');
+  div.className='class-row';
+  const childCount = (children[cls.key]||[]).filter(c=>c.present).length;
+  const hasChildren = (children[cls.key]||[]).length > 0;
+  div.innerHTML=`
+    <span class="class-name">${cls.name}</span>
+    ${hasChildren ? `<button class="btn btn-sm" style="font-size:11px;padding:4px 9px;" onclick="openModal('${cls.key}','${cls.name}')">👥 ${childCount}/${(children[cls.key]||[]).length}</button>` : `<button class="btn btn-sm" style="font-size:11px;padding:4px 9px;" onclick="openModal('${cls.key}','${cls.name}')">+ Enfants</button>`}
+    <div class="counter">
+      <button class="btn-counter" onclick="adj('${cls.key}',-1)">−</button>
+      <input type="number" class="count-input" value="${val}" min="0" id="inp-${cls.key}" oninput="setC('${cls.key}',this.value)">
+      <button class="btn-counter" onclick="adj('${cls.key}',1)">+</button>
+    </div>
+    <div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${pct}%;background:${col};"></div></div></div>
+  `;
+  return div;
+}
+
+function makeAdultRow(svc) {
+  const val = adults[svc]||0;
+  const pct = Math.round(val/Math.max(val,10)*100);
+  const div = document.createElement('div');
+  div.className='class-row adult-row';
+  div.innerHTML=`
+    <span class="adult-name">Adultes</span>
+    <div class="counter">
+      <button class="btn-counter" onclick="adjA('${svc}',-1)">−</button>
+      <input type="number" class="count-input" value="${val}" min="0" id="inp-ad-${svc}" oninput="setA('${svc}',this.value)" style="border-color:#fde68a;">
+      <button class="btn-counter" onclick="adjA('${svc}',1)">+</button>
+    </div>
+    <div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${pct}%;background:#b45309;"></div></div></div>
+  `;
+  return div;
+}
+
+function adj(key,d){ counts[key]=Math.max(0,(counts[key]||0)+d); const el=document.getElementById('inp-'+key); if(el)el.value=counts[key]; syncChildrenCount(key); updateStats(); save(); }
+function setC(key,v){ counts[key]=Math.max(0,parseInt(v)||0); syncChildrenCount(key); updateStats(); save(); }
+function adjA(svc,d){ adults[svc]=Math.max(0,(adults[svc]||0)+d); const el=document.getElementById('inp-ad-'+svc); if(el)el.value=adults[svc]; updateStats(); save(); }
+function setA(svc,v){ adults[svc]=Math.max(0,parseInt(v)||0); updateStats(); save(); }
+
+function syncChildrenCount(key) {
+  const list = children[key]||[];
+  const present = list.filter(c=>c.present).length;
+  if(list.length>0 && present!==counts[key]) {
+    // ne pas écraser si liste existante
+  }
+}
+
+function updateStats() {
+  const eMat=sumG('mat'), eS1=sumG('s1'), eS2=sumG('s2');
+  const tMat=eMat+(adults.mat||0), tS1=eS1+(adults.s1||0), tS2=eS2+(adults.s2||0);
+  document.getElementById('s-tot-mat').textContent=tMat;
+  document.getElementById('s-tot-s1').textContent=tS1;
+  document.getElementById('s-tot-s2').textContent=tS2;
+  const cc=(n,cap)=>n>cap?'cap-over':n>cap*0.85?'cap-warn':'cap-ok';
+  document.getElementById('s-cap-mat').innerHTML=`<span class="${cc(tMat,CAP_C)}">${tMat}/${CAP_C} places</span>`;
+  document.getElementById('s-cap-s1').innerHTML=`<span class="${cc(tS1,CAP_G)}">${tS1}/${CAP_G} places</span>`;
+  document.getElementById('s-cap-s2').innerHTML=`<span class="${cc(tS2,CAP_C)}">${tS2}/${CAP_C} places</span>`;
+}
+
+// ══ MODAL ENFANTS ════════════════════════════════════════════════
+function openModal(key, name) {
+  modalGroup = key;
+  document.getElementById('modal-title').textContent = name;
+  renderModalList();
+  document.getElementById('modal-children').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-children').classList.remove('open');
+  renderSaisie();
+  save();
+}
+function renderModalList() {
+  const list = children[modalGroup]||[];
+  const el = document.getElementById('modal-child-list');
+  el.innerHTML='';
+  list.forEach((c,i)=>{
+    const div=document.createElement('div');
+    div.className='child-item'+(c.present?' present':'');
+    div.innerHTML=`
+      <div class="child-check">
+        <svg class="child-check-icon" width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="child-name">${c.name}</span>
+      <button class="btn btn-sm" style="font-size:10px;padding:2px 6px;color:var(--red);border-color:var(--red-border);" onclick="removeChild(${i})">✕</button>
+    `;
+    div.addEventListener('click', (e)=>{ if(e.target.tagName==='BUTTON') return; toggleChild(i); });
+    el.appendChild(div);
+  });
+  // Sync count
+  const presentCount = list.filter(c=>c.present).length;
+  if(list.length>0) { counts[modalGroup]=presentCount; const el2=document.getElementById('inp-'+modalGroup); if(el2)el2.value=presentCount; updateStats(); }
+}
+function toggleChild(i) {
+  children[modalGroup][i].present = !children[modalGroup][i].present;
+  const presentCount = children[modalGroup].filter(c=>c.present).length;
+  counts[modalGroup]=presentCount;
+  renderModalList();
+}
+function removeChild(i) { children[modalGroup].splice(i,1); renderModalList(); }
+function addChild() {
+  const inp=document.getElementById('add-child-input');
+  const name=inp.value.trim();
+  if(!name) return;
+  if(!children[modalGroup]) children[modalGroup]=[];
+  children[modalGroup].push({name, present:true});
+  inp.value='';
+  renderModalList();
+}
+
+// ══ SCAN / IMPORT ════════════════════════════════════════════════
+
+function buildPrompt() {
+  const today = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  return `Voici une photo d'une feuille de pointage de restauration scolaire.
+
+C'est un tableau avec les colonnes : Enfant, Groupe, puis des colonnes par jour (Périsolaire Matin / Restauration Scolaire / Périsolaire Soir).
+
+CONSIGNE :
+1. Repère la colonne "Restauration Scolaire" du ${today}.
+2. Pour chaque ligne enfant, lis le symbole dans cette colonne :
+   - ⊕ (cercle avec croix) = PRÉSENT
+   - ○ (cercle vide) = ABSENT
+   - Cellule grise/vide = non inscrit (ignore-la)
+   - "ABS" écrit = ABSENT
+3. Lis la classe depuis les crochets dans le nom (ex: [CE1])
+
+Réponds UNIQUEMENT en JSON valide, sans texte autour :
+{"date_lue":"${today}","enfants":[{"nom":"NOM Prénom","classe":"CE1","present":true}]}
+
+Classes possibles : PS, MS, GS, CP, CE1, CE2, CM1, CM2`;
+}
+
+function openClaude() {
+  document.getElementById('claude-prompt-display').textContent = buildPrompt();
+  window.open('https://claude.ai', '_blank');
+  toast('Claude.ai ouvert — joins ta photo et colle le message');
+}
+
+function copyPrompt() {
+  const prompt = buildPrompt();
+  document.getElementById('claude-prompt-display').textContent = prompt;
+  navigator.clipboard.writeText(prompt).then(()=>toast('Message copié !')).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = prompt; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Message copié !');
+  });
+}
+
+function importJSON() {
+  const raw = document.getElementById('json-paste').value.trim();
+  const result = document.getElementById('scan-result');
+  result.style.cssText = '';
+  if(!raw) { result.style.display='block'; result.style.background='var(--red-light)'; result.style.border='1px solid var(--red-border)'; result.style.color='var(--red)'; result.innerHTML='Rien à importer — colle d\'abord la réponse de Claude.'; return; }
+
+  try {
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    if(!parsed.enfants || !parsed.enfants.length) throw new Error('Format invalide');
+
+    const classeToKey = {
+      'PS':'ps','MS':'mgs','GS':'mgs',
+      'CP':'cp','CE1':'ce1','CE2':'ce2','CM1':'cm1','CM2':'cm2'
+    };
+
+    parsed.enfants.forEach(e => {
+      let classeRaw = e.classe || '';
+      const matchNom = e.nom.match(/\[([^\]]+)\]/);
+      if(matchNom) classeRaw = matchNom[1].trim();
+      const classeUp = classeRaw.toUpperCase().replace(/\s/g,'');
+      let key = classeToKey[classeUp];
+      if(!key) { for(const [k,v] of Object.entries(classeToKey)) { if(classeUp.includes(k)){key=v;break;} } }
+      if(!key) return;
+
+      const nomPropre = e.nom.replace(/\[[^\]]+\]/g,'').trim();
+      if(!children[key]) children[key]=[];
+      const existing = children[key].findIndex(c=>c.name.toLowerCase()===nomPropre.toLowerCase());
+      if(existing>=0) { children[key][existing].present = !!e.present; }
+      else { children[key].push({name:nomPropre, present:!!e.present}); }
+    });
+
+    CLASSES.forEach(cls=>{
+      if(children[cls.key]?.length>0) counts[cls.key] = children[cls.key].filter(c=>c.present).length;
+    });
+
+    const nb = parsed.enfants.filter(e=>e.present).length;
+    const ab = parsed.enfants.filter(e=>!e.present).length;
+    result.style.display='block';
+    result.style.background='var(--green-light)';
+    result.style.border='1px solid var(--green-border)';
+    result.style.color='var(--green)';
+    result.innerHTML=`✓ Importé — <strong>${nb} présent(s)</strong>, ${ab} absent(s) sur ${parsed.enfants.length} inscrits.`;
+
+    save(); renderSaisie(); renderChildrenScan();
+    toast(`${nb} présents importés`);
+  } catch(err) {
+    result.style.display='block';
+    result.style.background='var(--red-light)';
+    result.style.border='1px solid var(--red-border)';
+    result.style.color='var(--red)';
+    result.innerHTML='Format invalide. Assure-toi de copier tout le JSON renvoyé par Claude.';
+  }
+}
+
+// ══ EXPORT / IMPORT DONNÉES ═══════════════════════════════════════
+function exportData() {
+  const data = { counts, adults, children, defaults_counts, defaults_adults, history, periCounts, exported_at: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toLocaleDateString('fr-FR').replace(/\//g,'-');
+  a.href=url; a.download=`cantine-${date}.json`; a.click();
+  URL.revokeObjectURL(url);
+  toast('Données exportées');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(data.counts) counts = data.counts;
+      if(data.adults) adults = data.adults;
+      if(data.children) children = data.children;
+      if(data.defaults_counts) defaults_counts = data.defaults_counts;
+      if(data.defaults_adults) defaults_adults = data.defaults_adults;
+      if(data.history) history = data.history;
+      if(data.periCounts) periCounts = data.periCounts;
+      CLASSES.forEach(c=>{ if(!(c.key in counts)) counts[c.key]=0; if(!(c.key in children)) children[c.key]=[]; });
+      save(); renderSaisie(); renderChildrenScan();
+      toast('Données importées avec succès');
+    } catch(err) { toast('Fichier invalide'); }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+async function handleScan(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const loading=document.getElementById('scan-loading');
+  const result=document.getElementById('scan-result');
+  loading.style.display='block';
+  result.style.display='none';
+  result.style.background='';result.style.borderColor='';result.style.color='';
+
+  try {
+    const b64 = await fileToBase64(file);
+
+    // Date du jour formatée pour matcher la colonne
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+    const groupMapping = CLASSES.map(c=>({key:c.key, name:c.name, group:c.group}));
+
+    const prompt = `Tu analyses une feuille de pointage de restauration scolaire.
+
+C'est un tableau avec :
+- Colonne "Enfant" : nom + classe entre crochets (ex: BALLETTI Océa [CE1])
+- Colonne "Groupe" : PS, CE1, CE2, etc.
+- Plusieurs colonnes par jour : "Périsolaire Matin", "Restauration Scolaire" (= cantine midi), "Périsolaire Soir"
+
+CONSIGNE : Trouve la colonne "Restauration Scolaire" (ou "Midi") correspondant à la date du ${todayStr}. Si cette date n'est pas visible, prends la première colonne "Restauration Scolaire" disponible.
+
+Pour chaque ligne enfant, lis le symbole dans cette colonne :
+- ⊕ (croix entourée / cercle avec +) = PRÉSENT
+- ○ (cercle vide) = ABSENT  
+- Cellule vide ou grisée = NON INSCRIT (ne pas compter)
+- "ABS" écrit = ABSENT
+
+Réponds UNIQUEMENT en JSON valide sans aucun texte autour, format exact :
+{
+  "date_lue": "JJ/MM/AAAA",
+  "enfants": [
+    {"nom": "NOM Prénom", "classe": "PS", "present": true},
+    {"nom": "NOM Prénom", "classe": "CE1", "present": false}
+  ]
+}
+
+Les classes possibles : PS (Petite Section), MS (Moyenne Section), GS (Grande Section), CP, CE1, CE2, CM1, CM2.
+Inclus UNIQUEMENT les enfants inscrits à la cantine (symbole ⊕ ou ○, pas les cellules vides/grises).`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        messages:[{role:'user', content:[
+          {type:'image', source:{type:'base64', media_type:file.type, data:b64}},
+          {type:'text', text:prompt}
+        ]}]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text||'';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+
+    if(!parsed.enfants || !parsed.enfants.length) throw new Error('Aucun enfant détecté');
+
+    // Mapping classe → group key
+    const classeToKey = {
+      'PS':'ps','MS':'mgs','GS':'mgs',
+      'CP':'cp','CE1':'ce1','CE2':'ce2','CM1':'cm1','CM2':'cm2'
+    };
+
+    // Regrouper par classe
+    const newCounts = {};
+    const newChildren = {};
+    CLASSES.forEach(c=>{ newCounts[c.key]=0; newChildren[c.key]=[]; });
+
+    parsed.enfants.forEach(e=>{
+      // Détecter la classe depuis le nom (ex: "BALLETTI Océa [CE1]") ou le champ classe
+      let classeRaw = e.classe||'';
+      // Essayer aussi depuis le nom
+      const matchNom = e.nom.match(/\[([^\]]+)\]/);
+      if(matchNom) classeRaw = matchNom[1].trim();
+
+      // Normaliser
+      const classeUp = classeRaw.toUpperCase().replace(/\s/g,'');
+      let key = classeToKey[classeUp];
+
+      // Fallback : chercher dans le nom s'il contient PS/MS/GS/CP/CE1/CE2/CM1/CM2
+      if(!key) {
+        for(const [k,v] of Object.entries(classeToKey)) {
+          if(classeUp.includes(k)) { key=v; break; }
+        }
+      }
+      if(!key) return; // classe inconnue, on ignore
+
+      const nomPropre = e.nom.replace(/\[[^\]]+\]/g,'').trim();
+      newChildren[key].push({name:nomPropre, present:!!e.present});
+      if(e.present) newCounts[key]++;
+    });
+
+    // Fusionner avec les enfants déjà connus (on ne supprime pas)
+    CLASSES.forEach(cls=>{
+      newChildren[cls.key].forEach(nc=>{
+        const existing = children[cls.key]?.findIndex(c=>c.name.toLowerCase()===nc.name.toLowerCase());
+        if(existing>=0) {
+          children[cls.key][existing].present = nc.present;
+        } else {
+          if(!children[cls.key]) children[cls.key]=[];
+          children[cls.key].push(nc);
+        }
+      });
+      // Recalculer le count depuis la liste
+      if(children[cls.key]?.length>0) {
+        counts[cls.key] = children[cls.key].filter(c=>c.present).length;
+      } else {
+        counts[cls.key] = newCounts[cls.key];
+      }
+    });
+
+    const totalPresents = parsed.enfants.filter(e=>e.present).length;
+    const totalAbsents  = parsed.enfants.filter(e=>!e.present).length;
+    const dateLue = parsed.date_lue||todayStr;
+
+    result.style.display='block';
+    result.innerHTML=`✓ Feuille du ${dateLue} analysée — <strong>${totalPresents} présent(s)</strong>, ${totalAbsents} absent(s) sur ${parsed.enfants.length} inscrits à la cantine.`;
+
+    save();
+    renderSaisie();
+    renderChildrenScan();
+    toast(`${totalPresents} présents importés depuis la feuille`);
+
+  } catch(err) {
+    result.style.display='block';
+    result.style.background='var(--red-light)';
+    result.style.borderColor='var(--red-border)';
+    result.style.color='var(--red)';
+    result.innerHTML='Erreur de lecture. Assure-toi que la photo est nette et bien cadrée sur le tableau.';
+    console.error(err);
+  }
+  loading.style.display='none';
+  input.value='';
+}
+
+function fileToBase64(file) {
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=()=>rej();
+    r.readAsDataURL(file);
+  });
+}
+
+function renderChildrenScan() {
+  const el=document.getElementById('children-list-scan');
+  el.innerHTML='';
+  CLASSES.forEach(cls=>{
+    const list=children[cls.key]||[];
+    if(list.length===0) return;
+    const sec=document.createElement('div');
+    sec.innerHTML=`<div class="section-title">${cls.name}</div>`;
+    const grid=document.createElement('div');
+    grid.className='class-list';
+    list.forEach((c,i)=>{
+      const row=document.createElement('div');
+      row.className='class-row';
+      row.style.cursor='pointer';
+      if(c.present) row.style.background='var(--green-light)';
+      row.innerHTML=`<span class="class-name">${c.name}</span><span style="font-size:12px;color:${c.present?'var(--green)':'var(--text3)'};">${c.present?'Présent':'Absent'}</span>`;
+      row.onclick=()=>{ children[cls.key][i].present=!children[cls.key][i].present; const p=(children[cls.key]||[]).filter(x=>x.present).length; counts[cls.key]=p; save(); renderChildrenScan(); renderSaisie(); };
+      grid.appendChild(row);
+    });
+    sec.appendChild(grid);
+    el.appendChild(sec);
+  });
+  if(!el.children.length) el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:12px 0;">Aucun enfant dans la liste. Ajoute-les depuis la saisie du jour.</div>';
+}
+
+// ══ PLANS ════════════════════════════════════════════════════════
+function setPlanMode(mode) {
+  planMode=mode;
+  document.getElementById('ptog-mat').className='plan-toggle'+(mode==='mat'?' active-mat':'');
+  document.getElementById('ptog-s2').className='plan-toggle'+(mode==='s2'?' active-s2':'');
+  drawCantine(mode);
+}
+
+function placeCantine(enf, adCount, mode) {
+  const orderKey=mode==='mat'?'matOrder':'s2Order';
+  let state={};
+  TC.forEach(t=>state[t.id]={placed:0,adPlaced:0,standby:false});
+  if(mode==='mat') TC.filter(t=>t.s2Order!==null&&t.matOrder===null).forEach(t=>state[t.id].standby=true);
+  const used=TC.filter(t=>t[orderKey]!==null).sort((a,b)=>a[orderKey]-b[orderKey]);
+  let rem=enf;
+  used.forEach(t=>{ if(rem<=0)return; const p=Math.min(rem,t.cap); rem-=p; state[t.id].placed=p; });
+  let adLeft=adCount;
+  TC.filter(t=>mode==='mat'?t.adultMat:t.adultS2).forEach(t=>{
+    if(adLeft<=0)return;
+    const space=t.cap-state[t.id].placed;
+    const ap=space>0?Math.min(adLeft,space):Math.min(adLeft,1);
+    state[t.id].placed+=ap; state[t.id].adPlaced+=ap; adLeft=Math.max(0,adLeft-ap);
+  });
+  return TC.map(t=>({...t,...state[t.id]}));
+}
+
+function placeGS(enf, adCount) {
+  let rem=enf;
+  let result=TG.map(t=>{ if(rem<=0)return{...t,placed:0,adPlaced:0}; const p=Math.min(rem,t.cap); rem-=p; return{...t,placed:p,adPlaced:0}; });
+  let adLeft=adCount;
+  return result.map(t=>{ if(t.adultS1&&adLeft>0){ const sp=t.cap-t.placed; const ap=sp>0?Math.min(adLeft,sp):Math.min(adLeft,1); adLeft=Math.max(0,adLeft-ap); return{...t,placed:t.placed+ap,adPlaced:ap}; } return t; });
+}
+
+function getColor(t, fill, bg, txt) {
+  if(t.standby&&t.placed===0) return {bg:'#fafaf9',stroke:'#78716c',dash:'5,3',op:'0.85',txt:'#78716c'};
+  if(t.placed===0) return {bg:'transparent',stroke:t.low?'#166534':'#ccc',dash:t.low?'5,3':'none',op:'0.35',txt:t.low?'#166534':'#bbb'};
+  if(t.placed>t.cap) return {bg:'#fef2f2',stroke:'#dc2626',dash:'none',op:'1',txt:'#dc2626'};
+  if(t.adPlaced>0) return {bg:'#fffbeb',stroke:'#b45309',dash:'none',op:'1',txt:'#b45309'};
+  if(t.low) return {bg:'#f0fdf4',stroke:'#166534',dash:'none',op:'1',txt:'#166534'};
+  return {bg:bg,stroke:fill,dash:'none',op:'1',txt:txt};
+}
+
+function drawSVGTable(svg, pop, t, c) {
+  const cx=t.x+t.w/2, cy=t.y+t.h/2;
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.style.cursor='pointer'; g.style.opacity=c.op;
+
+  if(t.round){
+    const r=Math.min(t.w,t.h)/2;
+    const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    el.setAttribute('cx',cx);el.setAttribute('cy',cy);el.setAttribute('r',r);
+    el.setAttribute('fill',c.bg);el.setAttribute('stroke',c.stroke);el.setAttribute('stroke-width','2');
+    g.appendChild(el);
+  } else {
+    const el=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    el.setAttribute('x',t.x);el.setAttribute('y',t.y);el.setAttribute('width',t.w);el.setAttribute('height',t.h);
+    el.setAttribute('rx','6');el.setAttribute('fill',c.bg);el.setAttribute('stroke',c.stroke);el.setAttribute('stroke-width','2');
+    if(c.dash!=='none') el.setAttribute('stroke-dasharray',c.dash);
+    g.appendChild(el);
+  }
+
+  if(t.label){
+    const tl=document.createElementNS('http://www.w3.org/2000/svg','text');
+    tl.setAttribute('x',cx);tl.setAttribute('y',t.placed>0?cy-9:cy+5);
+    tl.setAttribute('text-anchor','middle');tl.setAttribute('font-size','13');
+    tl.setAttribute('font-weight','600');tl.setAttribute('fill',c.txt);
+    tl.textContent=t.label; g.appendChild(tl);
+  }
+  if(t.placed>0){
+    const t2=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t2.setAttribute('x',cx);t2.setAttribute('y',t.label?cy+9:cy+5);
+    t2.setAttribute('text-anchor','middle');t2.setAttribute('font-size','13');
+    t2.setAttribute('font-weight','500');t2.setAttribute('fill',c.txt);
+    t2.textContent=`${t.placed}/${t.cap}`; g.appendChild(t2);
+    if(t.adPlaced>0){
+      const t3=document.createElementNS('http://www.w3.org/2000/svg','text');
+      t3.setAttribute('x',cx);t3.setAttribute('y',t.label?cy+23:cy+20);
+      t3.setAttribute('text-anchor','middle');t3.setAttribute('font-size','10');
+      t3.setAttribute('fill','#92400e');
+      t3.textContent=`${t.adPlaced} adulte${t.adPlaced>1?'s':''}`; g.appendChild(t3);
+    }
+  } else if(t.standby){
+    const ts=document.createElementNS('http://www.w3.org/2000/svg','text');
+    ts.setAttribute('x',cx);ts.setAttribute('y',cy+(t.label?16:4));
+    ts.setAttribute('text-anchor','middle');ts.setAttribute('font-size','9');ts.setAttribute('fill','#78716c');
+    ts.textContent='2e service'; g.appendChild(ts);
+  }
+
+  g.addEventListener('click',(e)=>{
+    const r2=svg.getBoundingClientRect();
+    pop.style.display='block';
+    pop.style.left=Math.min(e.clientX-r2.left+10, r2.width-160)+'px';
+    pop.style.top=Math.max(e.clientY-r2.top-60,4)+'px';
+    const st=t.standby&&!t.placed?'Réservée 2e service':t.placed===0?'Vide':t.placed>t.cap?'Surcharge':t.placed>=t.cap?'Pleine':'Occupée';
+    pop.innerHTML=`<strong>Table ${t.label||'ronde'}</strong>${t.low?' · basse':''}<br>${t.placed}/${t.cap} places${t.adPlaced>0?'<br>'+t.adPlaced+' adulte(s)':''}<br><em>${st}</em>`;
+    setTimeout(()=>pop.style.display='none',2500);
+  });
+  svg.appendChild(g);
+}
+
+function drawCantine(mode) {
+  const enf=mode==='mat'?sumG('mat'):sumG('s2');
+  const adCt=mode==='mat'?(adults.mat||0):(adults.s2||0);
+  const fill=mode==='mat'?'#2563eb':'#0f766e';
+  const bg=mode==='mat'?'#eff6ff':'#f0fdfa';
+  const txt=mode==='mat'?'#1e40af':'#134e4a';
+  const svg=document.getElementById('svg-cant');
+  const pop=document.getElementById('tip-cant');
+  svg.innerHTML='';
+  const placed=placeCantine(enf,adCt,mode);
+  const total=enf+adCt;
+  const cls=total>CAP_C?'cap-over':total>CAP_C*0.85?'cap-warn':'cap-ok';
+  const adN=adCt>0?` · dont ${adCt} adulte${adCt>1?'s':''}` :'';
+  document.getElementById('plan-cap-cant').innerHTML=`<span class="${cls}">${total} / ${CAP_C} places utilisées${adN}</span>`;
+  placed.forEach(t=>drawSVGTable(svg,pop,t,getColor(t,fill,bg,txt)));
+  const entry=document.createElementNS('http://www.w3.org/2000/svg','text');
+  entry.setAttribute('x','8');entry.setAttribute('y','395');
+  entry.setAttribute('font-size','10');entry.setAttribute('fill','#ccc');
+  entry.textContent='▼ Entrée'; svg.appendChild(entry);
+}
+
+function drawGS() {
+  const enf=sumG('s1'), adCt=adults.s1||0;
+  const svg=document.getElementById('svg-gs');
+  const pop=document.getElementById('tip-gs');
+  svg.innerHTML='';
+  const placed=placeGS(enf,adCt);
+  const total=enf+adCt;
+  const cls=total>CAP_G?'cap-over':total>CAP_G*0.85?'cap-warn':'cap-ok';
+  const adN=adCt>0?` · dont ${adCt} adulte${adCt>1?'s':''}` :'';
+  document.getElementById('plan-cap-gs').innerHTML=`<span class="${cls}">${total} / ${CAP_G} places utilisées${adN}</span>`;
+  placed.forEach(t=>drawSVGTable(svg,pop,t,getColor(t,'#6d28d9','#f5f3ff','#4c1d95')));
+  const entry=document.createElementNS('http://www.w3.org/2000/svg','text');
+  entry.setAttribute('x','8');entry.setAttribute('y','264');
+  entry.setAttribute('font-size','10');entry.setAttribute('fill','#ccc');
+  entry.textContent='▼ Entrée'; svg.appendChild(entry);
+}
+
+// ══ HISTORIQUE ═══════════════════════════════════════════════════
+function saveToday() {
+  const today=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const todayKey=new Date().toISOString().slice(0,10);
+  const existing=history.findIndex(h=>h.date===todayKey);
+  const entry={
+    date:todayKey, label:today,
+    counts:{...counts}, adults:{...adults},
+    children: JSON.parse(JSON.stringify(children))
+  };
+  if(existing>=0) history[existing]=entry;
+  else history.unshift(entry);
+  if(history.length>30) history=history.slice(0,30);
+  save();
+  toast('Journée enregistrée');
+  renderHistory();
+}
+
+function renderHistory() {
+  const el=document.getElementById('history-list');
+  if(!history.length){
+    el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px 0;">Aucune journée enregistrée.</div>';
+    return;
+  }
+  el.innerHTML='';
+  history.forEach((h,i)=>{
+    const eMat=CLASSES.filter(c=>c.group==='mat').reduce((a,c)=>a+(h.counts[c.key]||0),0);
+    const eS1=CLASSES.filter(c=>c.group==='s1').reduce((a,c)=>a+(h.counts[c.key]||0),0);
+    const eS2=CLASSES.filter(c=>c.group==='s2').reduce((a,c)=>a+(h.counts[c.key]||0),0);
+    const div=document.createElement('div');
+    div.className='history-item';
+    div.innerHTML=`
+      <div class="history-date">${h.label}</div>
+      <div class="history-stats">
+        <span class="history-pill pill-blue">Mat. ${eMat+(h.adults?.mat||0)}</span>
+        <span class="history-pill pill-purple">1er ${eS1+(h.adults?.s1||0)}</span>
+        <span class="history-pill pill-teal">2e ${eS2+(h.adults?.s2||0)}</span>
+      </div>
+      <div class="history-actions">
+        <button class="btn btn-sm" onclick="loadHistory(${i})">Recharger</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteHistory(${i})">✕</button>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+function loadHistory(i) {
+  const h=history[i];
+  counts={...h.counts};
+  adults={...h.adults};
+  children=JSON.parse(JSON.stringify(h.children||{}));
+  save(); renderSaisie();
+  nav('saisie');
+  toast('Journée du '+h.label+' rechargée');
+}
+
+function deleteHistory(i) {
+  history.splice(i,1); save(); renderHistory();
+}
+
+// ══ EFFECTIFS TYPES ═══════════════════════════════════════════════
+function renderDefaults() {
+  const el=document.getElementById('defaults-list');
+  el.innerHTML='';
+  CLASSES.forEach(cls=>{
+    const val=defaults_counts[cls.key]||0;
+    const row=document.createElement('div');
+    row.className='default-row';
+    row.innerHTML=`
+      <span class="default-name">${cls.name}</span>
+      <input type="number" class="default-input" value="${val}" min="0" id="def-${cls.key}" oninput="defaults_counts['${cls.key}']=parseInt(this.value)||0">
+    `;
+    el.appendChild(row);
+  });
+  ['mat','s1','s2'].forEach(svc=>{
+    const val=defaults_adults[svc]||0;
+    const labels={mat:'Adultes maternelle',s1:'Adultes 1er service',s2:'Adultes 2e service'};
+    const row=document.createElement('div');
+    row.className='default-row';
+    row.style.background='var(--amber-light)';
+    row.style.borderColor='var(--amber-border)';
+    row.innerHTML=`
+      <span class="default-name" style="color:var(--amber);">${labels[svc]}</span>
+      <input type="number" class="default-input" value="${val}" min="0" id="def-ad-${svc}" oninput="defaults_adults['${svc}']=parseInt(this.value)||0">
+    `;
+    el.appendChild(row);
+  });
+}
+
+function saveDefaults() { save(); toast('Effectifs types enregistrés'); }
+
+function copyTodayToDefaults() {
+  defaults_counts={...counts};
+  defaults_adults={...adults};
+  save(); renderDefaults();
+  toast('Effectifs types mis à jour depuis aujourd\'hui');
+}
+
+function loadDefaults() {
+  CLASSES.forEach(c=>{ counts[c.key]=defaults_counts[c.key]||0; });
+  adults={...defaults_adults};
+  save(); renderSaisie();
+  toast('Effectifs types chargés');
+}
+
+function resetAll() {
+  CLASSES.forEach(c=>counts[c.key]=0);
+  adults={mat:0,s1:0,s2:0};
+  save(); renderSaisie();
+  toast('Remis à zéro');
+}
+
+// ══ TOAST ════════════════════════════════════════════════════════
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ══ PÉRISCOLAIRE ══════════════════════════════════════════════════
+
+let periService = 'peri_mat';
+
+function setPeriService(svc) {
+  periService = svc;
+  const btns = {peri_mat:'ptab-peri-mat', peri_soir:'ptab-peri-soir'};
+  Object.entries(btns).forEach(([s, id]) => {
+    const btn = document.getElementById(id);
+    if(btn) btn.className = 'plan-toggle' + (s===svc ? ' active-mat' : '');
+  });
+  renderPeriList();
+}
+
+function renderPeri() {
+  const today = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const sub = document.getElementById('peri-date-sub');
+  if(sub) sub.textContent = today;
+  updatePeriStats();
+  setPeriService(periService);
+}
+
+function updatePeriStats() {
+  // Count across all children for each peri service
+  let matCount = 0, soirCount = 0;
+  CLASSES.forEach(cls => {
+    (children[cls.key]||[]).forEach(c => {
+      if(c.peri_mat) matCount++;
+      if(c.peri_soir) soirCount++;
+    });
+  });
+  periCounts.peri_mat = matCount;
+  periCounts.peri_soir = soirCount;
+  const matEl = document.getElementById('peri-tot-mat');
+  const soirEl = document.getElementById('peri-tot-soir');
+  const allEl = document.getElementById('peri-tot-all');
+  if(matEl) matEl.textContent = matCount;
+  if(soirEl) soirEl.textContent = soirCount;
+  if(allEl) allEl.textContent = matCount + soirCount;
+}
+
+function renderPeriList() {
+  const el = document.getElementById('peri-list');
+  if(!el) return;
+
+  // Build full list of all children across all classes
+  const allChildren = [];
+  CLASSES.forEach(cls => {
+    (children[cls.key]||[]).forEach((c, idx) => {
+      allChildren.push({...c, classeKey: cls.key, classeName: cls.name, idx});
+    });
+  });
+
+  if(!allChildren.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center;">Aucun enfant enregistré.<br>Ajoute des enfants depuis "Saisie du jour".</div>';
+    return;
+  }
+
+  // Group by class
+  const grouped = {};
+  allChildren.forEach(e => {
+    if(!grouped[e.classeName]) grouped[e.classeName] = [];
+    grouped[e.classeName].push(e);
+  });
+
+  let html = '';
+  Object.entries(grouped).forEach(([classe, enfants]) => {
+    const presentCount = enfants.filter(e => e[periService]).length;
+    html += `<div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">${classe}</div>
+        <div style="font-size:11px;color:var(--text3);">${presentCount}/${enfants.length} présents</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;">`;
+
+    enfants.forEach(e => {
+      const isPresent = !!e[periService];
+      const bg = isPresent ? 'var(--green-light)' : 'var(--surface)';
+      const border = isPresent ? 'var(--green-border)' : 'var(--border)';
+      const checkBg = isPresent ? 'var(--green)' : 'transparent';
+      const checkBorder = isPresent ? 'var(--green)' : 'var(--border2)';
+      const statusColor = isPresent ? 'var(--green)' : 'var(--text3)';
+      const statusTxt = isPresent ? 'Présent' : 'Absent';
+
+      html += `<div class="class-row"
+        style="background:${bg};border-color:${border};cursor:pointer;transition:all 0.12s;"
+        onclick="togglePeriChild('${e.classeKey}',${e.idx},'${periService}')">
+        <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid ${checkBorder};background:${checkBg};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.12s;">
+          ${isPresent ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>' : ''}
+        </div>
+        <span class="class-name">${e.name}</span>
+        <span style="font-size:11px;font-weight:500;color:${statusColor};margin-left:auto;">${statusTxt}</span>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function togglePeriChild(classeKey, idx, svc) {
+  if(children[classeKey] && children[classeKey][idx] !== undefined) {
+    children[classeKey][idx][svc] = !children[classeKey][idx][svc];
+    updatePeriStats();
+    save();
+    renderPeriList();
+  }
+}
+
+function addPeriChild() {
+  const name = prompt('Nom et prénom :');
+  if(!name || !name.trim()) return;
+  const classeKey = CLASSES[0].key; // default PS
+  if(!children[classeKey]) children[classeKey] = [];
+  const newChild = {name:name.trim(), present:false, peri_mat:true, peri_soir:false, remarque:''};
+  newChild[periService] = true;
+  children[classeKey].push(newChild);
+  updatePeriStats();
+  save();
+  renderPeriList();
+  toast('Enfant ajouté');
+}
+
+function savePeri() {
+  const todayKey = new Date().toISOString().slice(0,10);
+  const todayLabel = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+
+  // Build peri snapshot
+  const periSnapshot = {peri_mat:[], peri_soir:[]};
+  CLASSES.forEach(cls => {
+    (children[cls.key]||[]).forEach(c => {
+      if(c.peri_mat) periSnapshot.peri_mat.push({name:c.name, classe:cls.name});
+      if(c.peri_soir) periSnapshot.peri_soir.push({name:c.name, classe:cls.name});
+    });
+  });
+
+  const existing = history.findIndex(h => h.date === todayKey);
+  if(existing >= 0) {
+    history[existing].periSnapshot = periSnapshot;
+    history[existing].periCounts = {...periCounts};
+  } else {
+    history.unshift({
+      date:todayKey, label:todayLabel,
+      counts:{...counts}, adults:{...adults},
+      children: JSON.parse(JSON.stringify(children)),
+      periSnapshot, periCounts:{...periCounts}
+    });
+  }
+  if(history.length > 30) history = history.slice(0,30);
+  save();
+  toast('Périscolaire enregistré');
+}
+
+function exportPeriExcel() {
+  const now = new Date();
+  const curMonth = now.toISOString().slice(0,7);
+  const monthHistory = history.filter(h => h.date && h.date.startsWith(curMonth) && h.periSnapshot);
+
+  if(!monthHistory.length) {
+    toast('Aucune donnée périscolaire ce mois');
+    return;
+  }
+
+  let csv = '﻿';
+  csv += `Date,Jour,Nom,Classe,Matin,Soir
+`;
+
+  // Collect all unique children
+  const allNames = new Map();
+  monthHistory.forEach(h => {
+    ['peri_mat','peri_soir'].forEach(svc => {
+      (h.periSnapshot[svc]||[]).forEach(e => {
+        const key = e.name + '|' + e.classe;
+        if(!allNames.has(key)) allNames.set(key, {name:e.name, classe:e.classe});
+      });
+    });
+  });
+
+  monthHistory.sort((a,b) => a.date.localeCompare(b.date)).forEach(h => {
+    const matNames = new Set((h.periSnapshot.peri_mat||[]).map(e=>e.name));
+    const soirNames = new Set((h.periSnapshot.peri_soir||[]).map(e=>e.name));
+    allNames.forEach(({name, classe}) => {
+      const mat = matNames.has(name) ? 'Présent' : 'Absent';
+      const soir = soirNames.has(name) ? 'Présent' : 'Absent';
+      csv += `${h.date},"${h.label}","${name}","${classe}","${mat}","${soir}"
+`;
+    });
+  });
+
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const lbl = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(' ','-');
+  a.href=url; a.download=`periscolaire-${lbl}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toast('Export périscolaire téléchargé');
+}
+
+// ══ FEUILLE DE POINTAGE ══════════════════════════════════════════
+
+let pointageService = 'mat';
+// pointageData = { date: { service: [{name, classe, present, remarque}] } }
+// stored in history entries as h.pointage = { mat:[], s1:[], s2:[] }
+
+function setPointageService(svc) {
+  pointageService = svc;
+  ['mat','s1','s2'].forEach(s => {
+    const btn = document.getElementById('ptab-'+s);
+    if(!btn) return;
+    btn.className = 'plan-toggle' + (s===svc ? (s==='mat'?' active-mat':s==='s1'?' active-gs':' active-s2') : '');
+  });
+  renderPointageList();
+}
+
+function renderPointage() {
+  const today = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const sub = document.getElementById('pointage-date-sub');
+  if(sub) sub.textContent = today;
+  setPointageService(pointageService);
+}
+
+function getPointageForService(svc) {
+  // Build list from children + counts for this service
+  const groups = svc==='mat' ? ['mat'] : svc==='s1' ? ['s1'] : ['s2'];
+  const list = [];
+
+  groups.forEach(g => {
+    CLASSES.filter(c=>c.group===g).forEach(cls => {
+      const kids = children[cls.key] || [];
+      if(kids.length > 0) {
+        kids.forEach(k => list.push({
+          name: k.name,
+          classe: cls.name,
+          classeKey: cls.key,
+          present: k.present,
+          remarque: k.remarque || ''
+        }));
+      } else {
+        // No named children - add count placeholders
+        const n = counts[cls.key] || 0;
+        for(let i=0; i<n; i++) {
+          list.push({name:'Enfant '+(i+1), classe:cls.name, classeKey:cls.key, present:true, remarque:'', placeholder:true});
+        }
+      }
+    });
+    // Add adults
+    const adCount = adults[g] || 0;
+    for(let i=0; i<adCount; i++) {
+      list.push({name:'Adulte '+(i+1), classe:'Adulte', classeKey:'adulte_'+g, present:true, remarque:'', isAdult:true});
+    }
+  });
+
+  return list;
+}
+
+function renderPointageList() {
+  const el = document.getElementById('pointage-list');
+  if(!el) return;
+  const list = getPointageForService(pointageService);
+
+  if(!list.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px 0;text-align:center;">Aucun enfant pour ce service.<br>Saisis les présences dans "Saisie du jour" d\'abord.</div>';
+    return;
+  }
+
+  // Group by classe
+  const grouped = {};
+  list.forEach(e => {
+    if(!grouped[e.classe]) grouped[e.classe] = [];
+    grouped[e.classe].push(e);
+  });
+
+  let html = '';
+  Object.entries(grouped).forEach(([classe, enfants]) => {
+    const presentCount = enfants.filter(e=>e.present).length;
+    html += `<div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">${classe}</div>
+        <div style="font-size:11px;color:var(--text3);">${presentCount}/${enfants.length} présents</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;">`;
+    enfants.forEach((e, idx) => {
+      const bgPresent = e.isAdult ? 'var(--amber-light)' : 'var(--green-light)';
+      const borderPresent = e.isAdult ? 'var(--amber-border)' : 'var(--green-border)';
+      const bg = e.present ? bgPresent : 'var(--red-light)';
+      const border = e.present ? borderPresent : 'var(--red-border)';
+      const checkBg = e.present ? (e.isAdult ? 'var(--amber)' : 'var(--green)') : 'transparent';
+      const checkBorder = e.present ? checkBg : 'var(--border2)';
+      const nameStyle = e.placeholder ? 'color:var(--text3);font-style:italic;' : '';
+
+      html += `<div class="class-row" id="prow-${pointageService}-${e.classeKey}-${idx}"
+        style="background:${bg};border-color:${border};cursor:pointer;"
+        onclick="togglePointageChild('${pointageService}','${e.classeKey}',${idx})">
+        <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid ${checkBorder};background:${checkBg};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.12s;">
+          ${e.present ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>' : ''}
+        </div>
+        <span class="class-name" style="${nameStyle}">${e.name}</span>
+        <input type="text" value="${e.remarque||''}" placeholder="Remarque..."
+          style="width:130px;font-size:12px;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;background:var(--surface);color:var(--text);flex-shrink:0;"
+          onclick="event.stopPropagation()"
+          oninput="updatePointageRemarque('${pointageService}','${e.classeKey}',${idx},this.value)">
+        <span style="font-size:11px;font-weight:500;color:${e.present?(e.isAdult?'var(--amber)':'var(--green)'):'var(--red)'};">${e.present?'Présent':'Absent'}</span>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+
+  el.innerHTML = html;
+}
+
+// In-memory pointage state per service (keyed by classeKey+idx)
+let pointageState = {mat:{}, s1:{}, s2:{}};
+
+function togglePointageChild(svc, classeKey, idx) {
+  // Toggle in children list
+  const cls = CLASSES.find(c=>c.key===classeKey);
+  if(cls && children[cls.key] && children[cls.key][idx] !== undefined) {
+    children[cls.key][idx].present = !children[cls.key][idx].present;
+    // Update count
+    counts[cls.key] = children[cls.key].filter(c=>c.present).length;
+    updateStats();
+    save();
+  }
+  renderPointageList();
+}
+
+function updatePointageRemarque(svc, classeKey, idx, val) {
+  const cls = CLASSES.find(c=>c.key===classeKey);
+  if(cls && children[cls.key] && children[cls.key][idx]) {
+    children[cls.key][idx].remarque = val;
+    save();
+  }
+}
+
+function addPointageChild() {
+  // Find which class to add to based on service
+  const groups = pointageService==='mat'?['mat']:pointageService==='s1'?['s1']:['s2'];
+  const clsKeys = CLASSES.filter(c=>groups.includes(c.group)).map(c=>c.key);
+  if(!clsKeys.length) return;
+
+  const name = prompt('Nom et prénom de l\'enfant :');
+  if(!name || !name.trim()) return;
+  const classeKey = clsKeys[0]; // default to first class of service
+  if(!children[classeKey]) children[classeKey]=[];
+  children[classeKey].push({name:name.trim(), present:true, remarque:''});
+  counts[classeKey] = children[classeKey].filter(c=>c.present).length;
+  save(); renderPointageList(); updateStats();
+  toast('Enfant ajouté');
+}
+
+function savePointage() {
+  // Save current state into today's history entry
+  const todayKey = new Date().toISOString().slice(0,10);
+  const todayLabel = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+
+  // Build pointage snapshot
+  const snapshot = {};
+  ['mat','s1','s2'].forEach(svc => {
+    snapshot[svc] = getPointageForService(svc);
+  });
+
+  const existing = history.findIndex(h=>h.date===todayKey);
+  const entry = {
+    date: todayKey, label: todayLabel,
+    counts: {...counts}, adults: {...adults},
+    children: JSON.parse(JSON.stringify(children)),
+    pointage: snapshot
+  };
+  if(existing>=0) history[existing] = entry;
+  else history.unshift(entry);
+  if(history.length>30) history = history.slice(0,30);
+  save();
+  toast('Feuille de pointage enregistrée');
+}
+
+// ══ EXPORT EXCEL (CSV compatible Excel) ══════════════════════════
+function exportPointageExcel() {
+  const now = new Date();
+  const curMonth = now.toISOString().slice(0,7);
+  const monthHistory = history.filter(h=>h.date && h.date.startsWith(curMonth) && h.pointage);
+
+  if(!monthHistory.length) {
+    toast('Aucune feuille de pointage enregistrée ce mois');
+    return;
+  }
+
+  // Build CSV with one sheet per service style
+  // Format: Date | Nom | Classe | Service | Présent | Remarque
+  let csv = '﻿'; // BOM for Excel UTF-8
+    csv += `Date,Jour,Nom,Classe,Service,Présent,Remarque\n`;
+
+  monthHistory.sort((a,b)=>a.date.localeCompare(b.date)).forEach(h => {
+    ['mat','s1','s2'].forEach(svc => {
+      const list = h.pointage[svc] || [];
+      list.forEach(e => {
+        const present = e.present ? 'Présent' : 'Absent';
+        const remarque = (e.remarque||'').replace(/"/g,'""');
+        const nom = e.name.replace(/"/g,'""');
+        csv += `${h.date},"${h.label}","${nom}","${e.classe}","${svcLabels[svc]}","${present}","${remarque}"
+`;
+      });
+    });
+  });
+
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const monthLabel = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(' ','-');
+  a.href = url;
+  a.download = `pointage-cantine-${monthLabel}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Export Excel du mois téléchargé');
+}
+
+// ══ INIT ═════════════════════════════════════════════════════════
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+document.getElementById('modal-children').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeModal(); });
+
+// ══ DARK MODE ════════════════════════════════════════════════════
+function toggleDark() {
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('cantine_theme', newTheme);
+  updateDarkButton(newTheme);
+}
+function updateDarkButton(theme) {
+  const lbl = document.getElementById('dark-label');
+  const ico = document.getElementById('dark-icon');
+  if(theme==='dark') {
+    if(lbl) lbl.textContent = 'Mode clair';
+    if(ico) ico.innerHTML = '<circle cx="8" cy="8" r="5" fill="currentColor"/>';
+  } else {
+    if(lbl) lbl.textContent = 'Mode sombre';
+    if(ico) ico.innerHTML = '<path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/><circle cx="8" cy="8" r="3"/>';
+  }
+}
+
+// ══ JOURS FÉRIÉS & VACANCES ZONE B 2025-2026 ══════════════════
+const FERIES = [
+  '2025-11-01','2025-11-11','2025-12-25',
+  '2026-01-01','2026-04-06','2026-05-01','2026-05-08','2026-05-14','2026-05-25','2026-07-14'
+];
+const VACANCES = [
+  {label:'Toussaint',    start:'2025-10-18', end:'2025-11-03'},
+  {label:'Noël',         start:'2025-12-20', end:'2026-01-05'},
+  {label:'Hiver',        start:'2026-02-07', end:'2026-02-23'},
+  {label:'Printemps',    start:'2026-04-04', end:'2026-04-20'},
+  {label:'Été',          start:'2026-07-04', end:'2026-08-31'},
+];
+
+function isFerie(dateStr) { return FERIES.includes(dateStr); }
+function getVacances(dateStr) {
+  const d = new Date(dateStr);
+  return VACANCES.find(v => d >= new Date(v.start) && d <= new Date(v.end));
+}
+function isCantineFermee(dateStr) {
+  const d = new Date(dateStr);
+  const dow = d.getDay();
+  if(dow===0||dow===6) return {closed:true, reason:'Week-end'};
+  if(isFerie(dateStr)) return {closed:true, reason:'Jour férié'};
+  const vac = getVacances(dateStr);
+  if(vac) return {closed:true, reason:'Vacances '+vac.label};
+  return {closed:false};
+}
+
+function checkTodayAlert() {
+  const today = new Date().toISOString().slice(0,10);
+  const status = isCantineFermee(today);
+  const alertEl = document.getElementById('stats-alert');
+  if(!alertEl) return;
+  if(status.closed) {
+    alertEl.style.display='block';
+    alertEl.style.cssText='display:block;padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:20px;background:var(--amber-light);border:1px solid var(--amber-border);color:var(--amber);';
+    alertEl.innerHTML='⚠️ Aujourd\'hui : <strong>'+status.reason+'</strong> — la cantine est probablement fermée.';
+  } else {
+    alertEl.style.display='none';
+  }
+}
+
+function renderCalendarInfo() {
+  const el = document.getElementById('calendar-info');
+  if(!el) return;
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = [];
+  // Next ferié
+  const nextFerie = FERIES.find(f=>f>today);
+  if(nextFerie) {
+    const d = new Date(nextFerie);
+    upcoming.push({label:'Prochain jour férié', date: d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})});
+  }
+  // Next vacances
+  const nextVac = VACANCES.find(v=>v.end>today);
+  if(nextVac) {
+    const inVac = getVacances(today);
+    if(inVac && inVac.label===nextVac.label) {
+      upcoming.push({label:'Vacances en cours ('+nextVac.label+')', date:'jusqu\'au '+new Date(nextVac.end).toLocaleDateString('fr-FR',{day:'numeric',month:'long'})});
+    } else {
+      upcoming.push({label:'Prochaines vacances ('+nextVac.label+')', date:'du '+new Date(nextVac.start).toLocaleDateString('fr-FR',{day:'numeric',month:'long'})+' au '+new Date(nextVac.end).toLocaleDateString('fr-FR',{day:'numeric',month:'long'})});
+    }
+  }
+  el.innerHTML = upcoming.map(u=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <span style="color:var(--text2);">${u.label}</span>
+      <span style="font-weight:500;">${u.date}</span>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:13px;">Aucune info disponible</div>';
+}
+
+// ══ STATISTIQUES ═════════════════════════════════════════════════
+function renderStats() {
+  const now = new Date();
+  const monthStr = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  document.getElementById('stats-month-label').textContent = monthStr;
+
+  // Filter history for current month
+  const curMonth = now.toISOString().slice(0,7);
+  const monthHistory = history.filter(h=>h.date && h.date.startsWith(curMonth));
+
+  if(!monthHistory.length) {
+    document.getElementById('avg-mat').textContent='—';
+    document.getElementById('avg-s1').textContent='—';
+    document.getElementById('avg-s2').textContent='—';
+    document.getElementById('busiest-day').textContent='Pas encore de données';
+    document.getElementById('lightest-day').textContent='—';
+    drawEmptyChart();
+    checkTodayAlert();
+    renderCalendarInfo();
+    return;
+  }
+
+  const totals = monthHistory.map(h=>{
+    const mat = CLASSES.filter(c=>c.group==='mat').reduce((a,c)=>a+(h.counts[c.key]||0),0) + (h.adults?.mat||0);
+    const s1  = CLASSES.filter(c=>c.group==='s1').reduce((a,c)=>a+(h.counts[c.key]||0),0) + (h.adults?.s1||0);
+    const s2  = CLASSES.filter(c=>c.group==='s2').reduce((a,c)=>a+(h.counts[c.key]||0),0) + (h.adults?.s2||0);
+    return {date:h.date, label:h.label, mat, s1, s2, total:mat+s1+s2};
+  });
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
+  document.getElementById('avg-mat').textContent = avg(totals.map(t=>t.mat));
+  document.getElementById('avg-s1').textContent  = avg(totals.map(t=>t.s1));
+  document.getElementById('avg-s2').textContent  = avg(totals.map(t=>t.s2));
+
+  const busiest  = totals.reduce((a,b)=>b.total>a.total?b:a);
+  const lightest = totals.reduce((a,b)=>b.total<a.total?b:a);
+  document.getElementById('busiest-day').textContent  = busiest.label;
+  document.getElementById('busiest-count').textContent = busiest.total+' repas';
+  document.getElementById('lightest-day').textContent  = lightest.label;
+  document.getElementById('lightest-count').textContent= lightest.total+' repas';
+
+  drawChart(totals);
+  checkTodayAlert();
+  renderCalendarInfo();
+}
+
+function drawChart(totals) {
+  const canvas = document.getElementById('stats-chart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 600;
+  const H = 160;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  const textColor = isDark ? '#a09890' : '#6b6560';
+  const gridColor = isDark ? '#2e2b28' : '#e2ddd6';
+
+  ctx.clearRect(0,0,W,H);
+  const pad = {top:10, bottom:30, left:28, right:10};
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+
+  const maxVal = Math.max(...totals.map(t=>t.mat+t.s1+t.s2), 1);
+  const barW = Math.min(chartW / totals.length - 4, 40);
+  const gap = (chartW - barW*totals.length) / (totals.length+1);
+
+  // Grid lines
+  [0,0.25,0.5,0.75,1].forEach(p=>{
+    const y = pad.top + chartH*(1-p);
+    ctx.strokeStyle=gridColor; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
+    ctx.fillStyle=textColor; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='right';
+    ctx.fillText(Math.round(maxVal*p), pad.left-4, y+3);
+  });
+
+  // Bars
+  totals.forEach((t,i)=>{
+    const x = pad.left + gap*(i+1) + barW*i;
+    const total = t.mat+t.s1+t.s2;
+    if(!total) return;
+    const bH = (total/maxVal)*chartH;
+    const matH = (t.mat/total)*bH;
+    const s1H  = (t.s1/total)*bH;
+    const s2H  = (t.s2/total)*bH;
+    const baseY = pad.top+chartH;
+
+    // mat
+    ctx.fillStyle='#2563eb';
+    ctx.beginPath(); ctx.roundRect(x, baseY-matH, barW, matH, [0,0,0,0]); ctx.fill();
+    // s1
+    ctx.fillStyle='#6d28d9';
+    ctx.fillRect(x, baseY-matH-s1H, barW, s1H);
+    // s2
+    ctx.fillStyle='#0f766e';
+    ctx.beginPath(); ctx.roundRect(x, baseY-matH-s1H-s2H, barW, s2H, [3,3,0,0]); ctx.fill();
+
+    // Date label
+    const d = new Date(t.date);
+    ctx.fillStyle=textColor; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(d.getDate(), x+barW/2, baseY+14);
+  });
+}
+function drawEmptyChart() {
+  const canvas = document.getElementById('stats-chart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth||600, H=160;
+  canvas.width=W*devicePixelRatio; canvas.height=H*devicePixelRatio;
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#a09890'; ctx.font='13px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Enregistre des journées pour voir les statistiques', W/2, H/2);
+}
+
+// ══ SUIVI CAF ════════════════════════════════════════════════════
+function renderCAF() {
+  const now = new Date();
+  const curMonth = now.toISOString().slice(0,7);
+  document.getElementById('caf-month-label').textContent = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  document.getElementById('caf-detail-month').textContent = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+
+  // Group history by month
+  const byMonth = {};
+  history.forEach(h=>{
+    if(!h.date) return;
+    const m = h.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m]={entries:[], total:0, jours:0};
+    const mat = CLASSES.filter(c=>c.group==='mat').reduce((a,c)=>a+(h.counts[c.key]||0),0) + (h.adults?.mat||0);
+    const s1  = CLASSES.filter(c=>c.group==='s1').reduce((a,c)=>a+(h.counts[c.key]||0),0) + (h.adults?.s1||0);
+    const s2  = CLASSES.filter(c=>c.group==='s2').reduce((a,c)=>a+(h.counts[c.key]||0),0) + (h.adults?.s2||0);
+    const total = mat+s1+s2;
+    byMonth[m].entries.push({...h, mat,s1,s2,total});
+    byMonth[m].total += total;
+    byMonth[m].jours++;
+  });
+
+  // Current month stats
+  const curData = byMonth[curMonth];
+  document.getElementById('caf-total').textContent = curData ? curData.total : 0;
+  document.getElementById('caf-jours').textContent = curData ? curData.jours : 0;
+  document.getElementById('caf-avg').textContent   = curData && curData.jours ? Math.round(curData.total/curData.jours) : '—';
+
+  // Monthly list
+  const listEl = document.getElementById('caf-monthly-list');
+  const months = Object.keys(byMonth).sort().reverse();
+  if(!months.length) {
+    listEl.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0;">Aucune donnée enregistrée.</div>';
+  } else {
+    listEl.innerHTML = months.map(m=>{
+      const d = new Date(m+'-01');
+      const lbl = d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+      const data = byMonth[m];
+      const avg = Math.round(data.total/data.jours);
+      return `<div style="display:flex;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;" onclick="showCAFDetail('${m}')" style="cursor:pointer;">
+        <span style="flex:1;font-weight:500;text-transform:capitalize;">${lbl}</span>
+        <span class="history-pill pill-blue">${data.total} repas</span>
+        <span class="history-pill" style="background:var(--surface2);color:var(--text2);">${data.jours}j · moy ${avg}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Detail for current month
+  showCAFDetail(curMonth, byMonth);
+}
+
+function showCAFDetail(month, byMonthArg) {
+  const byMonth = byMonthArg || buildByMonth();
+  const data = byMonth[month];
+  const el = document.getElementById('caf-detail-list');
+  if(!data || !data.entries.length) { el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0;">Aucune journée pour ce mois.</div>'; return; }
+  const d0 = new Date(month+'-01');
+  document.getElementById('caf-detail-month').textContent = d0.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  el.innerHTML = data.entries.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span style="min-width:100px;font-weight:500;">${e.label}</span>
+      <span class="history-pill pill-blue" style="font-size:10px;">Mat. ${e.mat}</span>
+      <span class="history-pill pill-purple" style="font-size:10px;">1er ${e.s1}</span>
+      <span class="history-pill pill-teal" style="font-size:10px;">2e ${e.s2}</span>
+      <span style="margin-left:auto;font-weight:600;color:var(--text);">${e.total} repas</span>
+    </div>`).join('');
+}
+
+function buildByMonth() {
+  const byMonth = {};
+  history.forEach(h=>{
+    if(!h.date) return;
+    const m=h.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m]={entries:[],total:0,jours:0};
+    const mat=CLASSES.filter(c=>c.group==='mat').reduce((a,c)=>a+(h.counts[c.key]||0),0)+(h.adults?.mat||0);
+    const s1=CLASSES.filter(c=>c.group==='s1').reduce((a,c)=>a+(h.counts[c.key]||0),0)+(h.adults?.s1||0);
+    const s2=CLASSES.filter(c=>c.group==='s2').reduce((a,c)=>a+(h.counts[c.key]||0),0)+(h.adults?.s2||0);
+    const total=mat+s1+s2;
+    byMonth[m].entries.push({...h,mat,s1,s2,total});
+    byMonth[m].total+=total; byMonth[m].jours++;
+  });
+  return byMonth;
+}
+
+function exportCAF() {
+  const byMonth = buildByMonth();
+  const months = Object.keys(byMonth).sort();
+  let csv = 'Date,Jour,Maternelle,1er service,2e service,Total repas\n';
+  months.forEach(m=>{
+    byMonth[m].entries.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+      csv += `${e.date},"${e.label}",${e.mat},${e.s1},${e.s2},${e.total}\n`;
+    });
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='rapport-caf-cantine.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Rapport CAF exporté');
+}
+
+// ══ PÉRISCOLAIRE ══════════════════════════════════════════════════
+
+// ══ FEUILLE DE POINTAGE ══════════════════════════════════════════
+
+// ══ INIT ═════════════════════════════════════════════════════════
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('modal-children').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeModal(); });
+
+// Dark mode init
+const savedTheme = localStorage.getItem('cantine_theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+updateDarkButton(savedTheme);
+
+// Check if cantine is closed today (show in saisie)
+const todayCheck = isCantineFermee(new Date().toISOString().slice(0,10));
+if(todayCheck.closed) {
+  const subEl = document.getElementById('today-date');
+  if(subEl) subEl.innerHTML += ' <span style="background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:500;margin-left:8px;">⚠ '+todayCheck.reason+'</span>';
+}
+
+load();
+renderSaisie();
+</script>
+</body>
+</html>
